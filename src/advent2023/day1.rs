@@ -1,8 +1,4 @@
-use std::ops::Add;
-
 fn trebuchet(input: String) -> i32 {
-    let input = crate::get_day_input(1);
-
     input.lines().map(|l| {
         get_nums_from_line(l.to_string())
     }).fold(0, |r, l| {
@@ -14,7 +10,7 @@ fn get_nums_from_line(line: String) -> i32 {
     let mut first_digit: Option<char> = None;
     let mut last_digit: Option<char> = None;
     let mut front_index: usize = 0;
-    let mut back_index: usize = 0;
+    let mut back_index: usize = line.len()-1;
 
     for (i, c) in line.chars().enumerate() {
         // Traverse over the characters in the line from both front and back at the same time. Once we encounter a
@@ -24,12 +20,6 @@ fn get_nums_from_line(line: String) -> i32 {
             // only increment if we need to process more
             front_index = i;
         }
-
-        if last_digit == None {
-            // only decrement if we need to process more
-            back_index = (line.len() - 1) - i;
-        }
-
 
         if front_index >= back_index {
             // the indexes have passed each other so one of the situations have happened:
@@ -55,11 +45,39 @@ fn get_nums_from_line(line: String) -> i32 {
             break;
         }
 
-        let char_from_front = c;
         let lz: Vec<char> = line.chars().collect();
-        let char_from_back = lz.get(back_index).expect("something").clone();
         if first_digit == None && c >= '0' && c <= '9' {
             first_digit = Some(c);
+        }
+
+        if last_digit == None {
+            // only decrement if we need to process more
+            back_index = (line.len() - 1) - i;
+        }
+        let char_from_back = lz.get(back_index).expect("something").clone();
+
+        if front_index >= back_index {
+            // the indexes have passed each other so one of the situations have happened:
+            // 1. The front index did not encounter a number, but the back did
+            // 2  The front index did encounter a number and the back did not
+            // 3. Neither encountered a number
+
+            // Situation 1
+            if first_digit == None && last_digit != None {
+                first_digit = last_digit.clone();
+            }
+
+            // Situation 2
+            else if first_digit != None && last_digit == None {
+                last_digit = first_digit.clone()
+            }
+
+            // Situation 3
+            else if first_digit == None && last_digit == None {
+                return 0;
+            }
+
+            break;
         }
 
         if last_digit == None && char_from_back >= '0' && char_from_back <= '9' {
@@ -81,6 +99,8 @@ fn get_nums_from_line(line: String) -> i32 {
 
 #[cfg(test)]
 mod test {
+    use crate::get_day_input;
+
     #[test]
     fn read_line_two_numbers_at_ends() {
         let test_data = "1aabbaa2".to_string();
@@ -149,5 +169,49 @@ mod test {
         let test_data = "abcdef5fedcba".to_string();
         let result = super::get_nums_from_line(test_data);
         assert_eq!(55, result)
+    }
+    #[test]
+    fn read_line_one_examples_1() {
+        let test_data = "1abc2".to_string();
+        let result = super::get_nums_from_line(test_data);
+        assert_eq!(12, result)
+    }
+
+     #[test]
+    fn read_line_one_examples_2() {
+        let test_data = "pqr3stu8vwx".to_string();
+        let result = super::get_nums_from_line(test_data);
+        assert_eq!(38, result)
+    }
+
+     #[test]
+    fn read_line_one_examples_3() {
+        let test_data = "a1b2c3d4e5f".to_string();
+        let result = super::get_nums_from_line(test_data);
+        assert_eq!(15, result)
+    }
+
+     #[test]
+    fn read_line_one_examples_4() {
+        let test_data = "treb7uchet".to_string();
+        let result = super::get_nums_from_line(test_data);
+        assert_eq!(77, result)
+    }
+
+    #[test]
+    fn trebuchet_example(){
+        let test_data = "1abc2
+pqr3stu8vwx
+a1b2c3d4e5f
+treb7uchet".to_string();
+
+        let result = super::trebuchet(test_data);
+        assert_eq!(142,result)
+    }
+
+    #[test]
+    fn day1_answer(){
+        let result = super::trebuchet(get_day_input(1));
+        println!("The answer is '{result}'")
     }
 }
