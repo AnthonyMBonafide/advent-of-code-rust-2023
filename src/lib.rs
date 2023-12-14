@@ -1,6 +1,6 @@
 use std::fs;
 
-mod advent2023;
+pub mod advent2023;
 
 
 fn get_day_input(day_number: u8) -> String {
