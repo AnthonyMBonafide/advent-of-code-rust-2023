@@ -1,3 +1,5 @@
+ const numbers: [&str;10] = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero"];
+
 pub fn trebuchet(input: String) -> i32 {
     input.lines().map(|l| {
         get_nums_from_line(l.to_string())
@@ -10,7 +12,7 @@ pub fn get_nums_from_line(line: String) -> i32 {
     let mut first_digit: Option<char> = None;
     let mut last_digit: Option<char> = None;
     let mut front_index: usize = 0;
-    let mut back_index: usize = line.len()-1;
+    let mut back_index: usize = line.len() - 1;
 
     for (i, c) in line.chars().enumerate() {
         // Traverse over the characters in the line from both front and back at the same time. Once we encounter a
@@ -109,7 +111,7 @@ fn get_nums_from_line_part2(line: String) -> i32 {
     let mut first_digit: Option<char> = None;
     let mut last_digit: Option<char> = None;
     let mut front_index: usize = 0;
-    let mut back_index: usize = line.len()-1;
+    let mut back_index: usize = line.len() - 1;
 
     for (i, c) in line.chars().enumerate() {
         // Traverse over the characters in the line from both front and back at the same time. Once we encounter a
@@ -196,6 +198,31 @@ fn get_nums_from_line_part2(line: String) -> i32 {
     return re;
 }
 
+fn determine_first_number_or_word(string: String) -> u8 {
+    // based on size of the string, remove words that it cannot be due to being too small
+    let mut possible_numbers:Vec<&str> = Vec::new();
+    for n in numbers{
+        if n.len() <= string.len(){
+            possible_numbers.push(n.clone());
+        }
+    }
+
+    let string_array: Vec<char> = string.chars().collect();
+    for (i, c) in string_array.iter().enumerate() {
+        if c >= &'0' && c <= &'9' {
+            return 0; // TODO make a number with ASCII math
+        }
+
+        for s in possible_numbers.iter() {
+            if string[i..].starts_with(*s) {
+                println!("{s}");
+            }
+        }
+    }
+
+    1
+}
+
 #[cfg(test)]
 mod tests {
     use crate::advent2023::day1::trebuchet;
@@ -271,6 +298,7 @@ mod tests {
         let result = get_nums_from_line(test_data);
         assert_eq!(55, result)
     }
+
     #[test]
     fn read_line_one_examples_1() {
         let test_data = "1abc2".to_string();
@@ -278,21 +306,21 @@ mod tests {
         assert_eq!(12, result)
     }
 
-     #[test]
+    #[test]
     fn read_line_one_examples_2() {
         let test_data = "pqr3stu8vwx".to_string();
         let result = get_nums_from_line(test_data);
         assert_eq!(38, result)
     }
 
-     #[test]
+    #[test]
     fn read_line_one_examples_3() {
         let test_data = "a1b2c3d4e5f".to_string();
         let result = get_nums_from_line(test_data);
         assert_eq!(15, result)
     }
 
-     #[test]
+    #[test]
     fn read_line_one_examples_4() {
         let test_data = "treb7uchet".to_string();
         let result = get_nums_from_line(test_data);
@@ -300,19 +328,34 @@ mod tests {
     }
 
     #[test]
-    fn trebuchet_example(){
+    fn trebuchet_example() {
         let test_data = "1abc2
 pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet".to_string();
 
         let result = trebuchet(test_data);
-        assert_eq!(142,result)
+        assert_eq!(142, result)
     }
 
     #[test]
-    fn day1_answer(){
+    fn day1_answer() {
         let result = trebuchet(get_day_input(1));
         println!("The answer is '{result}'")
     }
+
+    // Part 2
+
+    #[test]
+    fn determine_first_number_or_word_simple_word(){
+        let test_data = "onezy".to_string();
+        let result = determine_first_number_or_word(test_data);
+    }
+    #[test]
+    fn determine_first_number_or_word_simple_word2(){
+        let test_data = "zzonezy".to_string();
+        let result = determine_first_number_or_word(test_data);
+    }
+
+
 }
