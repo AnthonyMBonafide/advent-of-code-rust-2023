@@ -1,19 +1,12 @@
-use std::fs;
-
 pub mod advent2023;
-
-
-fn get_day_input(day_number: u8) -> String {
-    fs::read_to_string(format!("./test/day{day_number}_input.txt")).expect("data")
-}
 
 #[cfg(test)]
 mod test {
-    use crate::get_day_input;
+    use std::fs;
 
-    #[test]
-    fn test_day_1(){
-        let input = get_day_input(1);
-        assert_eq!(input.is_empty(), false)
+    /// Helps loading in test data. This can be changed in the future to pull the data directly
+    /// from the server if it is not already in the file system.
+    pub fn get_day_input(day_number: u8) -> String {
+        fs::read_to_string(format!("./test/day{day_number}_input.txt")).expect("data")
     }
 }
