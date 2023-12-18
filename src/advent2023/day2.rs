@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use itertools;
 
 #[derive(PartialEq)]
@@ -7,16 +6,14 @@ struct Problem {
 }
 
 impl Problem {
-    fn get_solution(&self, red_max: u8, green_max: u8, blue_max: u8) -> u32 {
+    fn get_solution_part1(&self, red_max: u8, green_max: u8, blue_max: u8) -> u32 {
         self.games.iter().filter(|g| {
             g.is_valid_for(red_max, green_max, blue_max)
         }).map(|g| { g.id }).sum()
     }
 
-    fn get_max_per_color(&self) -> (u8, u8, u8) {
-        let l :Vec<_> = self.games.iter().flat_map(|g|{&g.picks}).map(|p|{(p.red,p.green,p.blue)}).collect();
-        let (r,g,b): (Vec<_>, Vec<_>, Vec<_>) = itertools::multiunzip(l);
-        (*r.iter().max().expect(""), *g.iter().max().expect(""), *b.iter().max().expect(""))
+    fn get_solution_part2(&self) -> u64 {
+        self.games.iter().map(|g| {g.get_min_cubes_needed()}).map(|m| {m.0 as u64 * m.1 as u64 * m.2 as u64}).sum()
     }
 }
 
@@ -29,6 +26,12 @@ struct Game {
 impl Game {
     fn is_valid_for(&self, red_max: u8, green_max: u8, blue_max: u8) -> bool {
         self.picks.iter().all(|p| { p.is_valid_for(red_max, green_max, blue_max) })
+    }
+
+    fn get_min_cubes_needed(&self) -> (u8,u8,u8) {
+        let max_colors : Vec<_>= self.picks.iter().map(|p|{(p.red,p.green,p.blue)}).collect();
+        let (r,g,b): (Vec<_>, Vec<_>, Vec<_>) = itertools::multiunzip(max_colors);
+        (*r.iter().max().expect("a red max"), *g.iter().max().expect("a green max"), *b.iter().max().expect("a blue max"))
     }
 }
 
@@ -51,12 +54,12 @@ impl Pick {
             return false;
         }
 
-        return true;
+        true
     }
 }
 
 
-fn read_file_into_problem(full_data: &String) -> Problem {
+fn read_file_into_problem(full_data: &str) -> Problem {
     let games: Vec<_> = full_data.lines().map(|s| {
         read_line_into_game(s)
     }).collect();
@@ -67,12 +70,12 @@ fn read_file_into_problem(full_data: &String) -> Problem {
 }
 
 fn read_line_into_game(line: &str) -> Game {
-    let game_id_and_data: Vec<_> = line.split(":").collect();
+    let game_id_and_data: Vec<_> = line.split(':').collect();
     let game_id = game_id_and_data[0];
     let game_data = game_id_and_data[1];
 
     let game_id = game_id.split_ascii_whitespace().collect::<Vec<_>>()[1];
-    let picks: Vec<_> = game_data.split(";").collect();
+    let picks: Vec<_> = game_data.split(';').collect();
 
     let mut parsed_picks: Vec<Pick> = Vec::new();
 
@@ -80,7 +83,7 @@ fn read_line_into_game(line: &str) -> Game {
         let mut red_count: u8 = 0;
         let mut green_count: u8 = 0;
         let mut blue_count: u8 = 0;
-        let cubes: Vec<_> = pick.split(",").collect();
+        let cubes: Vec<_> = pick.split(',').collect();
         for cube in cubes {
             let cr = cube.split_ascii_whitespace().collect::<Vec<_>>();
             let number = cr[0].parse::<u8>().expect("a valid number");
@@ -99,10 +102,6 @@ fn read_line_into_game(line: &str) -> Game {
     }
 
     Game { id: game_id.parse::<u32>().expect("u32 id"), picks: parsed_picks }
-}
-
-fn cube_conundrum(input: String, red: u8, green: u8, blue: u8) -> u32 {
-    read_file_into_problem(&input).get_solution(red, green, blue)
 }
 
 #[cfg(test)]
@@ -169,6 +168,127 @@ mod tests {
         assert_eq!(false, g.is_valid_for(49, 21, 1))
     }
 
+    #[test]
+    fn game_get_min_simple(){
+        let game = Game{
+            id: 1,
+            picks: vec![Pick{
+                red: 5,
+                green: 0,
+                blue: 0,
+            },
+            Pick{
+                red: 0,
+                green: 5,
+                blue: 0,
+            },
+            Pick{
+                red: 0,
+                green: 0,
+                blue: 5,
+            },
+            ],
+        };
+
+       assert_eq!(game.get_min_cubes_needed(),(5,5,5))
+    }
+
+    #[test]
+    fn game_get_min_no_zero(){
+        let game = Game{
+            id: 1,
+            picks: vec![Pick{
+                red: 5,
+                green: 1,
+                blue: 3,
+            },
+            Pick{
+                red: 4,
+                green: 5,
+                blue: 4,
+            },
+            Pick{
+                red: 4,
+                green: 4,
+                blue: 5,
+            },
+            ],
+        };
+
+       assert_eq!(game.get_min_cubes_needed(),(5,5,5))
+    }
+
+
+    #[test]
+    fn solution_part2_one_game(){
+        let game = Game{
+            id: 1,
+            picks: vec![Pick{
+                red: 5,
+                green: 0,
+                blue: 0,
+            },
+                        Pick{
+                            red: 0,
+                            green: 5,
+                            blue: 0,
+                        },
+                        Pick{
+                            red: 0,
+                            green: 0,
+                            blue: 5,
+                        },
+            ],
+        };
+
+        let p = Problem{ games: vec![game] };
+        assert_eq!(125,p.get_solution_part2())
+    }
+     #[test]
+    fn solution_part2_multiple_games(){
+        let game1 = Game{
+            id: 1,
+            picks: vec![Pick{
+                red: 5,
+                green: 0,
+                blue: 0,
+            },
+                        Pick{
+                            red: 0,
+                            green: 5,
+                            blue: 0,
+                        },
+                        Pick{
+                            red: 0,
+                            green: 0,
+                            blue: 5,
+                        },
+            ],
+        };
+
+        let game2 = Game{
+            id: 1,
+            picks: vec![Pick{
+                red: 5,
+                green: 0,
+                blue: 0,
+            },
+                        Pick{
+                            red: 0,
+                            green: 5,
+                            blue: 0,
+                        },
+                        Pick{
+                            red: 0,
+                            green: 0,
+                            blue: 5,
+                        },
+            ],
+        };
+
+        let p = Problem{ games: vec![game1,game2] };
+        assert_eq!(250,p.get_solution_part2())
+    }
     #[test]
     fn game_validation_mulitple_picks_true() {
         let picks = vec![Pick {
@@ -245,7 +365,7 @@ mod tests {
             }]
         };
 
-        assert_eq!(0, p.get_solution(1, 1, 1))
+        assert_eq!(0, p.get_solution_part1(1, 1, 1))
     }
 
     #[test]
@@ -294,7 +414,7 @@ mod tests {
             ]
         };
 
-        assert_eq!(0, p.get_solution(1, 1, 1))
+        assert_eq!(0, p.get_solution_part1(1, 1, 1))
     }
 
     #[test]
@@ -362,7 +482,7 @@ mod tests {
             ]
         };
 
-        assert_eq!(7, p.get_solution(1, 1, 1))
+        assert_eq!(7, p.get_solution_part1(1, 1, 1))
     }
 
     #[test]
@@ -398,15 +518,23 @@ Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green".to_string();
 
         let p = read_file_into_problem(&data);
-        assert_eq!(8, p.get_solution(12, 13, 14))
+        assert_eq!(8, p.get_solution_part1(12, 13, 14))
     }
 
     #[test]
     fn day2_part_1_answer() {
         let data = get_day_input(2);
         let p = read_file_into_problem(&data);
-        let result = p.get_solution(12, 13, 14);
-        println!("{result}");
-        // assert_eq!(8, p.get_solution(12,13,14))
+        let result = p.get_solution_part1(12, 13, 14);
+        assert_eq!(2727, result)
     }
+    #[test]
+    fn day2_part_2_answer() {
+        let data = get_day_input(2);
+        let p = read_file_into_problem(&data);
+        let result = p.get_solution_part2();
+        assert_eq!(56580, result)
+    }
+
+
 }
